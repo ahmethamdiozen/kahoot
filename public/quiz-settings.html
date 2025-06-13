@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Ayarları</title>
+  <style>
+    body {
+      background-color: #1e3d59;
+      color: #ffffff;
+      font-family: "Segoe UI", sans-serif;
+      padding: 20px;
+      margin: 0;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #ffffff;
+      color: #1e3d59;
+      border: none;
+      padding: 10px 15px;
+      margin: 10px 5px 20px 0;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #dceeff;
+    }
+
+    #quizTitleInput {
+      font-size: 20px;
+      max-width: 400px;
+      margin-bottom: 10px;
+    }
+
+    .question-block {
+      background-color: #2b5278;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin: 6px 0 2px;
+    }
+
+    form {
+      max-width: 600px;
+      margin: auto;
+    }
+
+    hr {
+      margin: 30px 0;
+      border: none;
+      border-top: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h2>Quiz Ayarları</h2>
+    <div style="text-align: center; margin-bottom: 20px;">
+        <input type="text" id="quizTitleInput" placeholder="Quiz Başlığı" style="font-size: 20px; width: 100%; padding: 10px;" />
+        <br><br>
+        <button id="deleteBtn" style="margin-top: 10px; background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer;">
+        Quizi Sil
+        </button>
+    </div>  
+
+  <hr>
+
+  <form id="quizForm">
+    <div id="questionList" style="text-align: center;"></div>
+    <div style="text-align: center;">
+      <button type="button" style="text-align: center;" onclick="addQuestion()">+ Soru Ekle</button>
+      <button type="submit" >Değişiklikleri Kaydet</button>
+    </div>
+  </form>
+
+  <script>
+    const quizId = new URLSearchParams(window.location.search).get("quizId");
+    const token = localStorage.getItem("token");
+    const questionList = document.getElementById("questionList");
+    const quizTitleInput = document.getElementById("quizTitleInput");
+
+    async function loadQuiz() {
+      const res = await fetch(`http://localhost:3000/api/quiz/${quizId}`, {
+        headers: { Authorization: "Bearer " + token }
+      });
+      const data = await res.json();
+      quizTitleInput.value = data.quiz.title;
+      data.questions.forEach(q => addQuestion(q));
+    }
+
+    function addQuestion(q = {}) {
+      const qDiv = document.createElement("div");
+      qDiv.className = "question-block";
+
+      qDiv.innerHTML = `
+        <label>Soru:</label>
+        <input type="text" class="q-text" value="${q.text || ''}">
+
+        <label>Seçenekler:</label>
+        ${[0, 1, 2, 3].map(i => `
+          <input type="text" class="q-opt" value="${q.options ? q.options[i] : ''}" placeholder="Seçenek ${i + 1}">
+        `).join('')}
+
+        <label>Doğru Cevap (0-3):</label>
+        <input type="number" class="q-correct" value="${q.correct ?? 0}" min="0" max="3">
+
+        <label>Süre (saniye):</label>
+        <input type="number" class="q-duration" value="${q.duration ?? 15}" min="5">
+
+        <label>Görsel URL (opsiyonel):</label>
+        <input type="text" class="q-image" value="${q.image_url || ''}">
+
+        <label>Video URL (opsiyonel):</label>
+        <input type="text" class="q-video" value="${q.video_url || ''}">
+        <br><br>
+        <button type="button" class="delete-question">❌ Soruyu Sil</button>
+      `;
+
+      qDiv.querySelector(".delete-question").addEventListener("click", () => {
+        qDiv.remove();
+      });
+
+      questionList.appendChild(qDiv);
+    }
+
+    document.getElementById("deleteBtn").addEventListener("click", async () => {
+      if (!confirm("Bu quiz kalıcı olarak silinecek. Emin misiniz?")) return;
+
+      const res = await fetch(`http://localhost:3000/api/quiz/${quizId}`, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + token }
+      });
+
+      if (res.ok) {
+        alert("Quiz silindi.");
+        window.location.href = "quiz-list.html";
+      } else {
+        alert("Silme işlemi başarısız.");
+      }
+    });
+
+    document.getElementById("quizForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const questionBlocks = document.querySelectorAll(".question-block");
+
+      const updatedQuestions = Array.from(questionBlocks).map(block => {
+        const text = block.querySelector(".q-text").value;
+        const options = Array.from(block.querySelectorAll(".q-opt")).map(o => o.value);
+        const correct = parseInt(block.querySelector(".q-correct").value);
+        const duration = parseInt(block.querySelector(".q-duration").value);
+        const image_url = block.querySelector(".q-image").value || null;
+        const video_url = block.querySelector(".q-video").value || null;
+        return { text, options, correct, duration, image_url, video_url };
+      });
+
+      const res = await fetch(`http://localhost:3000/api/quiz/${quizId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          title: quizTitleInput.value,
+          questions: updatedQuestions
+        })
+      });
+
+      if (res.ok) {
+        alert("Quiz başarıyla güncellendi.");
+        window.location.href = "quiz-list.html";
+      } else {
+        alert("Bir hata oluştu.");
+      }
+    });
+
+    loadQuiz();
+  </script>
+</body>
+</html>

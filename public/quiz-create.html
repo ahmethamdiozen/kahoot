@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Oluştur</title>
+  <style>
+    body {
+      background-color: #1e3d59;
+      color: #fff;
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    form {
+      background-color: #2b5278;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      width: 95%;
+      max-width: 700px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      font-size: 15px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: none;
+    }
+
+    input {
+      background-color: #f0f0f0;
+      color: #000;
+    }
+
+    button {
+      background-color: #ffffff;
+      color: #1e3d59;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #dceeff;
+    }
+
+    .question-block {
+      background-color: #416a91;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+
+    .question-block input {
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Yeni Quiz Oluştur</h2>
+  <form id="quizForm">
+    <input type="text" id="title" placeholder="Quiz Başlığı" required>
+
+    <div id="questions"></div>
+    <button type="button" onclick="addQuestion()">+ Soru Ekle</button>
+    <button type="submit">Quiz Kaydet</button>
+  </form>
+
+  <script>
+    const questionsDiv = document.getElementById("questions");
+
+    function addQuestion() {
+      const qHTML = `
+        <div class="question-block">
+          <input type="text" placeholder="Soru" class="q-text" required>
+          <input type="text" placeholder="Seçenek 1" class="q-opt" required>
+          <input type="text" placeholder="Seçenek 2" class="q-opt" required>
+          <input type="text" placeholder="Seçenek 3" class="q-opt" required>
+          <input type="text" placeholder="Seçenek 4" class="q-opt" required>
+          <input type="number" placeholder="Doğru Seçeneğin Indexi (0-3)" class="q-correct" min="0" max="3" required>
+        </div>
+      `;
+      questionsDiv.insertAdjacentHTML("beforeend", qHTML);
+    }
+
+    document.getElementById("quizForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const title = document.getElementById("title").value;
+      const blocks = document.querySelectorAll(".question-block");
+
+      const questions = Array.from(blocks).map(block => {
+        const text = block.querySelector(".q-text").value;
+        const options = Array.from(block.querySelectorAll(".q-opt")).map(opt => opt.value);
+        const correct = parseInt(block.querySelector(".q-correct").value);
+        return { text, options, correct };
+      });
+
+      const res = await fetch("http://localhost:3000/api/quiz/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + localStorage.getItem("token")
+        },
+        body: JSON.stringify({ title, questions })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert("Quiz başarıyla oluşturuldu!");
+        window.location.href = "quiz-list.html";
+      } else {
+        alert(data.error || "Bir hata oluştu.");
+      }
+    });
+
+    window.onload = () => addQuestion();
+  </script>
+</body>
+</html>

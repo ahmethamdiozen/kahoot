@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Listesi</title>
+  <style>
+    body {
+      background-color: #1e3d59;
+      color: #ffffff;
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 10px 15px;
+      margin: 10px;
+      font-size: 16px;
+      background-color: #ffffff;
+      color: #1e3d59;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #dceeff;
+    }
+
+    #quizList {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .quiz-item {
+      background-color: #2b5278;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .quiz-item strong {
+      flex: 1;
+      font-size: 18px;
+    }
+
+    .quiz-item button {
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Quizler</h2>
+  <button onclick="window.location.href='quiz-create.html'">+ Yeni Quiz Oluştur</button>
+  <div id="quizList"></div>
+
+  <script>
+    async function fetchQuizzes() {
+      const res = await fetch("http://localhost:3000/api/quiz/my", {
+        headers: {
+          "Authorization": "Bearer " + localStorage.getItem("token")
+        }
+      });
+
+      const quizzes = await res.json();
+      const listDiv = document.getElementById("quizList");
+
+      quizzes.forEach(q => {
+        const div = document.createElement("div");
+        div.className = "quiz-item";
+        div.innerHTML = `
+          <strong>${q.title}</strong>
+          <div>
+            <button onclick="startQuiz(${q.id})">Sınavı Başlat</button>
+            <button onclick="goToSettings(${q.id})">Ayarlar</button>
+          </div>
+        `;
+        listDiv.appendChild(div);
+      });
+    }
+
+    function goToSettings(quizId) {
+      window.location.href = `quiz-settings.html?quizId=${quizId}`;
+    }
+
+    async function startQuiz(quizId) {
+      const res = await fetch(`http://localhost:3000/api/quiz/start/${quizId}`, {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + localStorage.getItem("token")
+        }
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        window.location.href = `teacher.html?code=${data.code}&quizId=${quizId}`;
+      } else {
+        alert("Sınav başlatılamadı.");
+      }
+    }
+
+    fetchQuizzes();
+  </script>
+</body>
+</html>

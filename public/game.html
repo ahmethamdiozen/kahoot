@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oyun Ekranı</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background-color: #1e3d59;
+      color: #f1f1f1;
+      font-family: "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h2, h3 {
+      text-align: center;
+      color: #ffffff;
+    }
+
+    #gameArea, #leaderboard {
+      width: 100%;
+      max-width: 600px;
+      background-color: #2b5278;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      margin-bottom: 20px;
+    }
+
+    #options button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 12px;
+      font-size: 16px;
+      background-color: white;
+      color: #1e3d59;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    #options button:hover {
+      background-color: #d0e6ff;
+    }
+
+    img, video {
+      max-width: 100%;
+      margin: 10px auto;
+      display: block;
+      border-radius: 8px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      padding: 8px;
+      border-bottom: 1px solid #ccc;
+      color: white;
+    }
+
+    #timer {
+      font-weight: bold;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2 id="welcome"></h2>
+
+  <div id="gameArea" style="display:none;">
+    <h3 id="questionText"></h3>
+    <div id="options"></div>
+    <p id="timer"></p>
+  </div>
+
+  <div id="leaderboard" style="display:none;">
+    <h3>Sıralama</h3>
+    <ul id="scores"></ul>
+  </div>
+
+  <script>
+    const socket = io("http://localhost:3000");
+    const name = localStorage.getItem("playerName");
+    const code = localStorage.getItem("roomCode");
+
+    document.getElementById("welcome").innerText = `Hoş geldin ${name}! Oda: ${code}`;
+    socket.emit("join_room", { name, code });
+
+    let questionStartTime = null;
+
+    socket.on("question", (question) => {
+      document.getElementById("leaderboard").style.display = "none";
+      document.getElementById("gameArea").style.display = "block";
+      document.getElementById("questionText").innerText = question.text;
+
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
+
+      if (question.image_url) {
+        const img = document.createElement("img");
+        img.src = question.image_url;
+        img.alt = "Soru görseli";
+        optionsDiv.appendChild(img);
+      }
+
+      if (question.video_url) {
+        const video = document.createElement("video");
+        video.src = question.video_url;
+        video.controls = true;
+        optionsDiv.appendChild(video);
+      }
+
+      question.options.forEach((opt, idx) => {
+        const btn = document.createElement("button");
+        btn.innerText = opt;
+        btn.onclick = () => {
+          const timeTaken = Math.floor((Date.now() - questionStartTime) / 1000);
+          socket.emit("submit_answer", { code, timeTaken, correct: idx === question.correct });
+          document.getElementById("gameArea").style.display = "none";
+        };
+        optionsDiv.appendChild(btn);
+      });
+
+      questionStartTime = Date.now();
+      startTimer(question.duration || 15);
+    });
+
+    function startTimer(seconds) {
+      const timer = document.getElementById("timer");
+      let s = seconds;
+      const interval = setInterval(() => {
+        timer.innerText = `Kalan süre: ${s} saniye`;
+        s--;
+        if (s < 0) {
+          clearInterval(interval);
+          timer.innerText = "";
+        }
+      }, 1000);
+    }
+
+    socket.on("leaderboard", (players) => {
+      const scores = document.getElementById("scores");
+      scores.innerHTML = "";
+      players
+        .filter(p => p.name !== "teacher")
+        .sort((a, b) => b.score - a.score)
+        .forEach(p => {
+          const li = document.createElement("li");
+          li.innerText = `${p.name}: ${p.score} puan`;
+          scores.appendChild(li);
+        });
+
+      document.getElementById("leaderboard").style.display = "block";
+    });
+
+    socket.on("player_list", (list) => {
+      console.log("Odadaki oyuncular:", list);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Öğretmen Paneli</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    body {
+      background-color: #1e3d59;
+      color: #ffffff;
+      font-family: "Segoe UI", sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    h1, h2, h3 {
+      text-align: center;
+    }
+
+    button {
+      display: block;
+      margin: 10px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #ffffff;
+      color: #1e3d59;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      color: #666;
+      cursor: not-allowed;
+    }
+
+    #status {
+      text-align: center;
+      margin: 15px 0;
+      font-weight: bold;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    li {
+      padding: 6px 10px;
+      border-bottom: 1px solid #4c6782;
+    }
+
+    #questionDisplay {
+      background-color: #2b5278;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    img, video {
+      max-width: 100%;
+      margin: 10px 0;
+      display: block;
+    }
+
+    #questionText {
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    #questionOptions {
+      margin-top: 10px;
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Oda Kodu: <span id="roomCodeDisplay"></span></h1>
+
+  <button id="nextBtn" disabled>Sonraki Soruyu Gönder</button>
+  <p id="status">Katılımcılar gelene kadar bekleyin.</p>
+
+  <div id="questionDisplay" style="display: none;">
+    <h2>Soru <span id="questionIndexDisplay"></span></h2>
+    <p id="questionText"></p>
+    <div id="mediaArea"></div>
+    <ul id="questionOptions"></ul>
+  </div>
+
+  <h2>Katılımcılar (<span id="playerCount">0</span>)</h2>
+  <ul id="playerList"></ul>
+
+  <h2>Sonuçlar</h2>
+  <ul id="scoreboard"></ul>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    const quizId = urlParams.get("quizId");
+    const socket = io("http://localhost:3000");
+
+    document.getElementById("roomCodeDisplay").innerText = code;
+    socket.emit("join_room", { name: "teacher", code });
+
+    const playerList = document.getElementById("playerList");
+    const scoreboard = document.getElementById("scoreboard");
+    const nextBtn = document.getElementById("nextBtn");
+    const statusText = document.getElementById("status");
+    const playerCount = document.getElementById("playerCount");
+
+    const questionDisplay = document.getElementById("questionDisplay");
+    const questionText = document.getElementById("questionText");
+    const questionOptions = document.getElementById("questionOptions");
+    const mediaArea = document.getElementById("mediaArea");
+    const questionIndexDisplay = document.getElementById("questionIndexDisplay");
+
+    let questions = [];
+    let currentIndex = 0;
+
+    socket.on("player_list", (players) => {
+      const realPlayers = players.filter(p => p.name !== "teacher");
+      playerList.innerHTML = "";
+      realPlayers.forEach(p => {
+        const li = document.createElement("li");
+        li.innerText = p.name;
+        playerList.appendChild(li);
+      });
+
+      playerCount.innerText = realPlayers.length;
+
+      if (realPlayers.length > 0) {
+        nextBtn.disabled = false;
+        statusText.innerText = "Hazır! Soruları gönderebilirsiniz.";
+      }
+    });
+
+    socket.on("leaderboard", (players) => {
+      scoreboard.innerHTML = "";
+      players
+        .filter(p => p.name !== "teacher")
+        .sort((a, b) => b.score - a.score)
+        .forEach(p => {
+          const li = document.createElement("li");
+          li.innerText = `${p.name}: ${p.score}`;
+          scoreboard.appendChild(li);
+        });
+    });
+
+    async function fetchQuestions() {
+      const res = await fetch(`http://localhost:3000/api/quiz/${quizId}/questions`, {
+        headers: {
+          "Authorization": "Bearer " + localStorage.getItem("token")
+        }
+      });
+
+      questions = await res.json();
+      updateButtonText();
+    }
+
+    function updateButtonText() {
+      if (currentIndex >= questions.length) {
+        nextBtn.innerText = "Sınav Bitti";
+        nextBtn.disabled = true;
+      } else if (currentIndex === 0) {
+        nextBtn.innerText = "Sınavı Başlat";
+      } else {
+        nextBtn.innerText = "Sonraki Soruyu Gönder";
+      }
+    }
+
+    function sendNextQuestion() {
+      if (currentIndex >= questions.length) {
+        statusText.innerText = "Tüm sorular gönderildi.";
+        nextBtn.disabled = true;
+        return;
+      }
+
+      const q = questions[currentIndex];
+      socket.emit("teacher_question", { code, question: q });
+
+      displayQuestion(q, currentIndex + 1);
+      currentIndex++;
+      updateButtonText();
+      statusText.innerText = `Soru ${currentIndex} gönderildi.`;
+
+      setTimeout(() => {
+        socket.emit("show_leaderboard", code);
+      }, (q.duration || 15) * 1000);
+    }
+
+    function displayQuestion(q, index) {
+      questionIndexDisplay.innerText = index;
+      questionText.innerText = q.text;
+      questionOptions.innerHTML = "";
+      mediaArea.innerHTML = "";
+
+      if (q.image_url) {
+        const img = document.createElement("img");
+        img.src = q.image_url;
+        img.alt = "Soru görseli";
+        mediaArea.appendChild(img);
+      }
+
+      if (q.video_url) {
+        const video = document.createElement("video");
+        video.src = q.video_url;
+        video.controls = true;
+        mediaArea.appendChild(video);
+      }
+
+      q.options.forEach((opt, idx) => {
+        const li = document.createElement("li");
+        li.innerText = `${idx + 1}) ${opt}`;
+        questionOptions.appendChild(li);
+      });
+
+      questionDisplay.style.display = "block";
+    }
+
+    nextBtn.addEventListener("click", sendNextQuestion);
+    fetchQuestions();
+  </script>
+</body>
+</html>
