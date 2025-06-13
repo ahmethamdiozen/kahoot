@@ -101,7 +101,7 @@
     const quizTitleInput = document.getElementById("quizTitleInput");
 
     async function loadQuiz() {
-      const res = await fetch(`http://localhost:3000/api/quiz/${quizId}`, {
+      const res = await fetch(`https://kahoot-production.up.railway.app/api/quiz/${quizId}`, {
         headers: { Authorization: "Bearer " + token }
       });
       const data = await res.json();
@@ -147,7 +147,7 @@
     document.getElementById("deleteBtn").addEventListener("click", async () => {
       if (!confirm("Bu quiz kalıcı olarak silinecek. Emin misiniz?")) return;
 
-      const res = await fetch(`http://localhost:3000/api/quiz/${quizId}`, {
+      const res = await fetch(`https://kahoot-production.up.railway.app/api/quiz/${quizId}`, {
         method: "DELETE",
         headers: { Authorization: "Bearer " + token }
       });
@@ -175,7 +175,7 @@
         return { text, options, correct, duration, image_url, video_url };
       });
 
-      const res = await fetch(`http://localhost:3000/api/quiz/${quizId}`, {
+      const res = await fetch(`https://kahoot-production.up.railway.app/api/quiz/${quizId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

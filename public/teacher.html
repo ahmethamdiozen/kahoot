@@ -100,7 +100,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
     const quizId = urlParams.get("quizId");
-    const socket = io("http://localhost:3000");
+    const socket = io("https://kahoot-production.up.railway.app");
 
     document.getElementById("roomCodeDisplay").innerText = code;
     socket.emit("join_room", { name: "teacher", code });
@@ -150,8 +150,8 @@
     });
 
     async function fetchQuestions() {
-      const res = await fetch(`http://localhost:3000/api/quiz/${quizId}/questions`, {
-        headers: {
+      const res = await fetch(`https://kahoot-production.up.railway.app/api/quiz/${quizId}/questions`, {
+        headers: {  
           "Authorization": "Bearer " + localStorage.getItem("token")
         }
       });
