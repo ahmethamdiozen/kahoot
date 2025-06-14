@@ -81,7 +81,7 @@
   <h1>Oda Kodu: <span id="roomCodeDisplay"></span></h1>
 
   <button id="nextBtn" disabled>Sonraki Soruyu Gönder</button>
-  <button id="backBtn" style="display:none; margin-top: 10px;">Quiz Listesine Dön</button>
+  <button id="backBtn" style="display:inline-block; margin-top: 10px;">Quiz Listesine Dön</button>
   <p id="status">Katılımcılar gelene kadar bekleyin.</p>
 
   <div id="questionDisplay" style="display: none;">
@@ -177,9 +177,6 @@
         statusText.innerText = "Tüm sorular gönderildi.";
         nextBtn.disabled = true;
         nextBtn.style.display = "none";
-        const backBtn = document.getElementById("backBtn");
-        backBtn.style.display = "block";
-        console.log("Back button display:", backBtn.style.display);
         return;
       }      
 
