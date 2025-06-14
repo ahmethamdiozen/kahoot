@@ -85,89 +85,94 @@
     <p id="timer"></p>
   </div>
 
-  <div id="leaderboard" style="display:none;">
-    <h3>Sıralama</h3>
-    <ul id="scores"></ul>
-  </div>
+<div id="leaderboard" style="display:none;">
+  <h3>Sıralama</h3>
+  <ul id="scores"></ul>
+  <button id="backBtn" style="margin-top: 20px;">Quiz Listesine Dön</button>
+</div>
 
-  <script>
-    const socket = io("https://kahoot-production.up.railway.app");
-    const name = localStorage.getItem("playerName");
-    const code = localStorage.getItem("roomCode");
+<script>
+  const socket = io("https://kahoot-production.up.railway.app"); // canlı sunucu URL
+  const name = localStorage.getItem("playerName");
+  const code = localStorage.getItem("roomCode");
 
-    document.getElementById("welcome").innerText = `Hoş geldin ${name}! Oda: ${code}`;
-    socket.emit("join_room", { name, code });
+  document.getElementById("welcome").innerText = `Hoş geldin ${name}! Oda: ${code}`;
+  socket.emit("join_room", { name, code });
 
-    let questionStartTime = null;
+  let questionStartTime = null;
 
-    socket.on("question", (question) => {
-      document.getElementById("leaderboard").style.display = "none";
-      document.getElementById("gameArea").style.display = "block";
-      document.getElementById("questionText").innerText = question.text;
+  socket.on("question", (question) => {
+    document.getElementById("leaderboard").style.display = "none";
+    document.getElementById("gameArea").style.display = "block";
+    document.getElementById("questionText").innerText = question.text;
 
-      const optionsDiv = document.getElementById("options");
-      optionsDiv.innerHTML = "";
+    const optionsDiv = document.getElementById("options");
+    optionsDiv.innerHTML = "";
 
-      if (question.image_url) {
-        const img = document.createElement("img");
-        img.src = question.image_url;
-        img.alt = "Soru görseli";
-        optionsDiv.appendChild(img);
-      }
-
-      if (question.video_url) {
-        const video = document.createElement("video");
-        video.src = question.video_url;
-        video.controls = true;
-        optionsDiv.appendChild(video);
-      }
-
-      question.options.forEach((opt, idx) => {
-        const btn = document.createElement("button");
-        btn.innerText = opt;
-        btn.onclick = () => {
-          const timeTaken = Math.floor((Date.now() - questionStartTime) / 1000);
-          socket.emit("submit_answer", { code, timeTaken, correct: idx === question.correct });
-          document.getElementById("gameArea").style.display = "none";
-        };
-        optionsDiv.appendChild(btn);
-      });
-
-      questionStartTime = Date.now();
-      startTimer(question.duration || 15);
-    });
-
-    function startTimer(seconds) {
-      const timer = document.getElementById("timer");
-      let s = seconds;
-      const interval = setInterval(() => {
-        timer.innerText = `Kalan süre: ${s} saniye`;
-        s--;
-        if (s < 0) {
-          clearInterval(interval);
-          timer.innerText = "";
-        }
-      }, 1000);
+    if (question.image_url) {
+      const img = document.createElement("img");
+      img.src = question.image_url;
+      img.alt = "Soru görseli";
+      optionsDiv.appendChild(img);
     }
 
-    socket.on("leaderboard", (players) => {
-      const scores = document.getElementById("scores");
-      scores.innerHTML = "";
-      players
-        .filter(p => p.name !== "teacher")
-        .sort((a, b) => b.score - a.score)
-        .forEach(p => {
-          const li = document.createElement("li");
-          li.innerText = `${p.name}: ${p.score} puan`;
-          scores.appendChild(li);
+    if (question.video_url) {
+      const video = document.createElement("video");
+      video.src = question.video_url;
+      video.controls = true;
+      optionsDiv.appendChild(video);
+    }
+
+    question.options.forEach((opt, idx) => {
+      const btn = document.createElement("button");
+      btn.innerText = opt;
+      btn.onclick = () => {
+        const timeTaken = Math.floor((Date.now() - questionStartTime) / 1000);
+        socket.emit("submit_answer", {
+          code,
+          timeTaken,
+          correct: idx === question.correct,
         });
-
-      document.getElementById("leaderboard").style.display = "block";
+        document.getElementById("gameArea").style.display = "none";
+      };
+      optionsDiv.appendChild(btn);
     });
 
-    socket.on("player_list", (list) => {
-      console.log("Odadaki oyuncular:", list);
-    });
-  </script>
-</body>
-</html>
+    questionStartTime = Date.now();
+    startTimer(question.duration || 15);
+  });
+
+  function startTimer(seconds) {
+    const timer = document.getElementById("timer");
+    let s = seconds;
+    const interval = setInterval(() => {
+      timer.innerText = `Kalan süre: ${s} saniye`;
+      s--;
+      if (s < 0) {
+        clearInterval(interval);
+        timer.innerText = "";
+        document.getElementById("gameArea").style.display = "none";
+      }
+    }, 1000);
+  }
+
+  socket.on("leaderboard", (players) => {
+    const scores = document.getElementById("scores");
+    scores.innerHTML = "";
+    players
+      .filter((p) => p.name !== "teacher")
+      .sort((a, b) => b.score - a.score)
+      .forEach((p) => {
+        const li = document.createElement("li");
+        li.innerText = `${p.name}: ${p.score} puan`;
+        scores.appendChild(li);
+      });
+
+    document.getElementById("leaderboard").style.display = "block";
+  });
+
+  document.getElementById("backBtn").addEventListener("click", () => {
+    window.location.href = "index.html";
+  });
+
+</script>

@@ -177,7 +177,9 @@
         statusText.innerText = "Tüm sorular gönderildi.";
         nextBtn.disabled = true;
         nextBtn.style.display = "none";
-        document.getElementById("backBtn").style.display = "inline-block";
+        const backBtn = document.getElementById("backBtn");
+        backBtn.style.display = "block";
+        console.log("Back button display:", backBtn.style.display);
         return;
       }      
 
