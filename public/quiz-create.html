@@ -27,6 +27,7 @@
       box-shadow: 0 0 15px rgba(0,0,0,0.3);
       width: 95%;
       max-width: 700px;
+      box-sizing: border-box;
     }
 
     input, button {
@@ -36,11 +37,13 @@
       margin-top: 10px;
       border-radius: 6px;
       border: none;
+      box-sizing: border-box;
     }
 
     input {
       background-color: #f0f0f0;
       color: #000;
+      box-sizing: border-box;
     }
 
     button {
@@ -49,6 +52,7 @@
       font-weight: bold;
       cursor: pointer;
       transition: background-color 0.3s ease;
+      box-sizing: border-box;
     }
 
     button:hover {
@@ -60,10 +64,12 @@
       padding: 15px;
       border-radius: 8px;
       margin-top: 20px;
+      box-sizing: border-box;
     }
 
     .question-block input {
       margin-top: 8px;
+      box-sizing: border-box;
     }
   </style>
 </head>
@@ -82,7 +88,7 @@
 
     function addQuestion() {
       const qHTML = `
-        <div class="question-block">
+        <div class="question-block" style="width: 100%;">
           <input type="text" placeholder="Soru" class="q-text" required>
           <input type="text" placeholder="Seçenek 1" class="q-opt" required>
           <input type="text" placeholder="Seçenek 2" class="q-opt" required>

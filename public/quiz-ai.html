@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Yapay Zeka ile Quiz Oluştur</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background-color: #1e3d59;
+      color: #fff;
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    form {
+      background-color: #2b5278;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      width: 95%;
+      max-width: 700px;
+      box-sizing: border-box;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      font-size: 15px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: none;
+      box-sizing: border-box;
+    }
+
+    input, select {
+      background-color: #f0f0f0;
+      color: #000;
+    }
+
+    button {
+      background-color: #ffffff;
+      color: #1e3d59;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #dceeff;
+    }
+
+    #message {
+      margin-top: 15px;
+      font-size: 16px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h2>Yapay Zeka ile Quiz Oluştur</h2>
+  <form id="aiForm">
+    <input type="text" id="topic" placeholder="Konu (örn. Dağlar)" required />
+    <input type="number" id="count" placeholder="Soru sayısı (örn. 10)" min="1" style="width: 100%;" />
+    <select id="difficulty">
+      <option value="">Zorluk Seç (isteğe bağlı)</option>
+      <option value="kolay">Kolay</option>
+      <option value="orta">Orta</option>
+      <option value="zor">Zor</option>
+    </select>
+    <input type="number" id="duration" placeholder="Her soru için süre (sn)" min="5" />
+    <button type="submit">Quiz Oluştur</button>
+  </form>
+  <div id="message"></div>
+
+  <script>
+    document.getElementById("aiForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem("token");
+
+      const topic = document.getElementById("topic").value;
+      const count = parseInt(document.getElementById("count").value);
+      const difficulty = document.getElementById("difficulty").value;
+      const duration = parseInt(document.getElementById("duration").value);
+      const msg = document.getElementById("message");
+
+      msg.innerText = "Yapay zeka quiz oluşturuyor...";
+
+      try {
+        const res = await fetch("https://kahoot-production.up.railway.app/api/quiz/generate-ai", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+          },
+          body: JSON.stringify({ topic, count, difficulty, duration })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          msg.innerText = "Quiz başarıyla oluşturuldu!";
+          window.location.href = `quiz-settings.html?quizId=${data.quizId}`;
+        } else {
+          msg.innerText = data.error || "Bir hata oluştu.";
+        }
+      } catch (err) {
+        msg.innerText = "Sunucuya ulaşılamadı.";
+      }
+    });
+  </script>
+</body>
+</html>

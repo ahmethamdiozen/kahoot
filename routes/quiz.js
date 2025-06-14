@@ -78,4 +78,7 @@ router.delete("/:id", auth, async (req, res) => {
   res.json({ message: "Quiz silindi" });
 });
 
+router.post("/generate-ai", auth, quizController.generateAIQuiz);
+
+
 module.exports = router;
