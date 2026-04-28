@@ -4,7 +4,7 @@ const pool = require("../db");
 
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
-  const hash = await bcrypt.hash(password, 10);
+  const hash = await bcrypt.hash(password, 8);
   await pool.query("INSERT INTO users(name, email, password) VALUES($1, $2, $3)", [name, email, hash]);
   res.json({ message: "User created" });
 };
