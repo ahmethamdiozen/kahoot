@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quiz Oluştur</title>
+  <script src="toast.js"></script>
   <style>
     body {
       background-color: #1e3d59;
@@ -43,7 +44,6 @@
     input {
       background-color: #f0f0f0;
       color: #000;
-      box-sizing: border-box;
     }
 
     button {
@@ -52,7 +52,6 @@
       font-weight: bold;
       cursor: pointer;
       transition: background-color 0.3s ease;
-      box-sizing: border-box;
     }
 
     button:hover {
@@ -69,7 +68,6 @@
 
     .question-block input {
       margin-top: 8px;
-      box-sizing: border-box;
     }
   </style>
 </head>
@@ -112,7 +110,7 @@
         return { text, options, correct };
       });
 
-      const res = await fetch("https://kahoot-production.up.railway.app/api/quiz/create", {
+      const res = await fetch("/api/quiz/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -123,10 +121,10 @@
 
       const data = await res.json();
       if (res.ok) {
-        alert("Quiz başarıyla oluşturuldu!");
-        window.location.href = "quiz-list.html";
+        showToast("Quiz başarıyla oluşturuldu!", "success");
+        setTimeout(() => window.location.href = "quiz-list.html", 1200);
       } else {
-        alert(data.error || "Bir hata oluştu.");
+        showToast(data.error || "Bir hata oluştu.", "error");
       }
     });
 

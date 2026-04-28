@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quiz Listesi</title>
+  <script src="toast.js"></script>
   <style>
     body {
       background-color: #1e3d59;
@@ -74,7 +75,7 @@
 
   <script>
     async function fetchQuizzes() {
-      const res = await fetch("https://kahoot-production.up.railway.app/api/quiz/my", {
+      const res = await fetch("/api/quiz/my", {
         headers: {
           "Authorization": "Bearer " + localStorage.getItem("token")
         }
@@ -102,7 +103,7 @@
     }
 
     async function startQuiz(quizId) {
-      const res = await fetch(`https://kahoot-production.up.railway.app/api/quiz/start/${quizId}`, {
+      const res = await fetch(`/api/quiz/start/${quizId}`, {
         method: "POST",
         headers: {
           "Authorization": "Bearer " + localStorage.getItem("token")
@@ -113,7 +114,7 @@
       if (res.ok) {
         window.location.href = `teacher.html?code=${data.code}&quizId=${quizId}`;
       } else {
-        alert("Sınav başlatılamadı.");
+        showToast("Sınav başlatılamadı.", "error");
       }
     }
 

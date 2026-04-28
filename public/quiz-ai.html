@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Yapay Zeka ile Quiz Oluştur</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="toast.js"></script>
   <style>
     body {
       background-color: #1e3d59;
@@ -94,7 +95,7 @@
       msg.innerText = "Yapay zeka quiz oluşturuyor...";
 
       try {
-        const res = await fetch("https://kahoot-production.up.railway.app/api/quiz/generate-ai", {
+        const res = await fetch("/api/quiz/generate-ai", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -106,13 +107,16 @@
         const data = await res.json();
 
         if (res.ok) {
-          msg.innerText = "Quiz başarıyla oluşturuldu!";
-          window.location.href = `quiz-settings.html?quizId=${data.quizId}`;
+          msg.innerText = "";
+          showToast("Quiz başarıyla oluşturuldu!", "success");
+          setTimeout(() => window.location.href = `quiz-settings.html?quizId=${data.quizId}`, 1200);
         } else {
-          msg.innerText = data.error || "Bir hata oluştu.";
+          msg.innerText = "";
+          showToast(data.error || "Bir hata oluştu.", "error");
         }
       } catch (err) {
-        msg.innerText = "Sunucuya ulaşılamadı.";
+        msg.innerText = "";
+        showToast("Sunucuya ulaşılamadı.", "error");
       }
     });
   </script>

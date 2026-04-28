@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Giriş Yap</title>
+  <script src="toast.js"></script>
   <style>
     body {
       background-color: #1e3d59;
@@ -66,11 +67,11 @@
     }
 
     p {
-        margin-top: 20px;
-        margin-bottom: -5px;
-        font-size: 15px;
-        text-align: center;
-      }
+      margin-top: 20px;
+      margin-bottom: -5px;
+      font-size: 15px;
+      text-align: center;
+    }
 
     a {
       color: #a3d0ff;
@@ -99,7 +100,7 @@
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
-      const res = await fetch("https://kahoot-production.up.railway.app/api/auth/login", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
@@ -108,10 +109,10 @@
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem("token", data.token);
-        alert("Giriş başarılı!");
-        window.location.href = "quiz-list.html";
+        showToast("Giriş başarılı!", "success");
+        setTimeout(() => window.location.href = "quiz-list.html", 1200);
       } else {
-        alert(data.error || "Giriş başarısız.");
+        showToast(data.error || "Giriş başarısız.", "error");
       }
     });
   </script>

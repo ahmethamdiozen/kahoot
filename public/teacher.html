@@ -82,7 +82,6 @@
       margin: 20px auto;
       padding: 10px 20px;
     }
-    
   </style>
 </head>
 <body>
@@ -91,7 +90,6 @@
   <button id="nextBtn" disabled>Sonraki Soruyu Gönder</button>
   <p id="status">Katılımcılar gelene kadar bekleyin.</p>
   <button id="backBtn" style="display:block; margin-top: 10px;">Quiz Listesine Dön</button>
-  
 
   <div id="questionDisplay" style="display: none;">
     <h2>Soru <span id="questionIndexDisplay"></span></h2>
@@ -110,7 +108,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
     const quizId = urlParams.get("quizId");
-    const socket = io("https://kahoot-production.up.railway.app");
+    const socket = io();
 
     document.getElementById("roomCodeDisplay").innerText = code;
     socket.emit("join_room", { name: "teacher", code });
@@ -160,8 +158,8 @@
     });
 
     async function fetchQuestions() {
-      const res = await fetch(`https://kahoot-production.up.railway.app/api/quiz/${quizId}/questions`, {
-        headers: {  
+      const res = await fetch(`/api/quiz/${quizId}/questions`, {
+        headers: {
           "Authorization": "Bearer " + localStorage.getItem("token")
         }
       });
@@ -187,7 +185,7 @@
         nextBtn.disabled = true;
         nextBtn.style.display = "none";
         return;
-      }      
+      }
 
       const q = questions[currentIndex];
       socket.emit("teacher_question", { code, question: q });

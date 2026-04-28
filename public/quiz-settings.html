@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quiz Ayarları</title>
+  <script src="toast.js"></script>
   <style>
     body {
       background-color: #1e3d59;
@@ -76,13 +77,13 @@
 </head>
 <body>
   <h2>Quiz Ayarları</h2>
-    <div style="text-align: center; margin-bottom: 20px;">
-        <input type="text" id="quizTitleInput" placeholder="Quiz Başlığı" style="font-size: 20px; width: 100%; padding: 10px;" />
-        <br><br>
-        <button id="deleteBtn" style="margin-top: 10px; background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer;">
-        Quizi Sil
-        </button>
-    </div>  
+  <div style="text-align: center; margin-bottom: 20px;">
+    <input type="text" id="quizTitleInput" placeholder="Quiz Başlığı" style="font-size: 20px; width: 100%; padding: 10px;" />
+    <br><br>
+    <button id="deleteBtn" style="margin-top: 10px; background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer;">
+      Quizi Sil
+    </button>
+  </div>
 
   <hr>
 
@@ -90,7 +91,7 @@
     <div id="questionList" style="text-align: center;"></div>
     <div style="text-align: center;">
       <button type="button" style="text-align: center;" onclick="addQuestion()">+ Soru Ekle</button>
-      <button type="submit" >Değişiklikleri Kaydet</button>
+      <button type="submit">Değişiklikleri Kaydet</button>
     </div>
   </form>
 
@@ -101,7 +102,7 @@
     const quizTitleInput = document.getElementById("quizTitleInput");
 
     async function loadQuiz() {
-      const res = await fetch(`https://kahoot-production.up.railway.app/api/quiz/${quizId}`, {
+      const res = await fetch(`/api/quiz/${quizId}`, {
         headers: { Authorization: "Bearer " + token }
       });
       const data = await res.json();
@@ -144,20 +145,20 @@
       questionList.appendChild(qDiv);
     }
 
-    document.getElementById("deleteBtn").addEventListener("click", async () => {
-      if (!confirm("Bu quiz kalıcı olarak silinecek. Emin misiniz?")) return;
+    document.getElementById("deleteBtn").addEventListener("click", () => {
+      showConfirm("Bu quiz kalıcı olarak silinecek. Emin misiniz?", async () => {
+        const res = await fetch(`/api/quiz/${quizId}`, {
+          method: "DELETE",
+          headers: { Authorization: "Bearer " + token }
+        });
 
-      const res = await fetch(`https://kahoot-production.up.railway.app/api/quiz/${quizId}`, {
-        method: "DELETE",
-        headers: { Authorization: "Bearer " + token }
+        if (res.ok) {
+          showToast("Quiz silindi.", "success");
+          setTimeout(() => window.location.href = "quiz-list.html", 1200);
+        } else {
+          showToast("Silme işlemi başarısız.", "error");
+        }
       });
-
-      if (res.ok) {
-        alert("Quiz silindi.");
-        window.location.href = "quiz-list.html";
-      } else {
-        alert("Silme işlemi başarısız.");
-      }
     });
 
     document.getElementById("quizForm").addEventListener("submit", async (e) => {
@@ -175,7 +176,7 @@
         return { text, options, correct, duration, image_url, video_url };
       });
 
-      const res = await fetch(`https://kahoot-production.up.railway.app/api/quiz/${quizId}`, {
+      const res = await fetch(`/api/quiz/${quizId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -188,10 +189,10 @@
       });
 
       if (res.ok) {
-        alert("Quiz başarıyla güncellendi.");
-        window.location.href = "quiz-list.html";
+        showToast("Quiz başarıyla güncellendi.", "success");
+        setTimeout(() => window.location.href = "quiz-list.html", 1200);
       } else {
-        alert("Bir hata oluştu.");
+        showToast("Bir hata oluştu.", "error");
       }
     });
 

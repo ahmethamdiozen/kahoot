@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kayıt Ol</title>
+  <script src="toast.js"></script>
   <style>
     body {
       background-color: #1e3d59;
@@ -103,7 +104,7 @@
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
-      const res = await fetch("https://kahoot-production.up.railway.app/api/auth/register", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password })
@@ -111,10 +112,10 @@
 
       const data = await res.json();
       if (res.ok) {
-        alert("Kayıt başarılı! Giriş yapabilirsiniz.");
-        window.location.href = "login.html";
+        showToast("Kayıt başarılı! Giriş yapabilirsiniz.", "success");
+        setTimeout(() => window.location.href = "login.html", 1500);
       } else {
-        alert(data.error || "Kayıt başarısız.");
+        showToast(data.error || "Kayıt başarısız.", "error");
       }
     });
   </script>
