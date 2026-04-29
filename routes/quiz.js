@@ -20,7 +20,11 @@ router.get("/:id/questions", auth, async (req, res) => {
      ORDER BY id`,
     [req.params.id]
   );
-  res.json(result.rows);
+  const rows = result.rows.map(q => ({
+    ...q,
+    options: typeof q.options === "string" ? JSON.parse(q.options) : q.options
+  }));
+  res.json(rows);
 });
 
 router.get("/:id", auth, async (req, res) => {
@@ -37,9 +41,14 @@ router.get("/:id", auth, async (req, res) => {
     [req.params.id]
   );
 
+  const parsedQuestions = questions.rows.map(q => ({
+    ...q,
+    options: typeof q.options === "string" ? JSON.parse(q.options) : q.options
+  }));
+
   res.json({
     quiz: quiz.rows[0],
-    questions: questions.rows,
+    questions: parsedQuestions,
   });
 });
 
