@@ -91,10 +91,22 @@
     <input type="password" id="password" placeholder="Şifre" required />
     <button type="submit">Giriş</button>
   </form>
+  <div style="margin-top:20px;background:#1a3550;border:1px solid #4a7aa0;border-radius:8px;padding:14px 20px;text-align:center;font-size:14px;width:50%;max-width:400px;box-sizing:border-box;">
+    <p style="margin:0 0 6px;font-weight:bold;color:#a3d0ff;">Demo Hesap</p>
+    <p style="margin:0 0 2px;">ornek@ornek.com</p>
+    <p style="margin:0 0 10px;">ornek</p>
+    <button type="button" onclick="demoLogin()" style="width:auto;padding:8px 20px;font-size:14px;">Demo ile Giriş Yap</button>
+  </div>
   <p>Hesabınız yok mu? <a href="register.html">Kayıt Ol</a></p>
   <p>Sınava katılmak için <a href="index.html">Devam Et</a></p>
 
   <script>
+    function demoLogin() {
+      document.getElementById("email").value = "ornek@ornek.com";
+      document.getElementById("password").value = "ornek";
+      document.getElementById("loginForm").requestSubmit();
+    }
+
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("email").value;
