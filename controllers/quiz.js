@@ -11,23 +11,37 @@ exports.generateAIQuiz = async (req, res) => {
 
   if (!topic) return res.status(400).json({ error: "Konu belirtilmeli." });
 
-  const prompt = `
-        ${topic} hakkında ${count} soruluk${difficulty ? " " + difficulty + " zorlukta" : ""} bir quiz hazırla. 
-        Her soru şu formatta olsun (JSON array olarak): 
-        [
-        {
-            "text": "Soru metni",
-            "options": ["A", "B", "C", "D"],
-            "correct": 1
-        }
-        ]
-    `;
+  const difficultyText = difficulty ? ` Zorluk seviyesi: ${difficulty}.` : "";
+  const prompt = `"${topic}" konusunda ${count} soruluk bir quiz oluştur.${difficultyText}
+
+Kurallar:
+- Her sorunun tam olarak 4 farklı seçeneği olsun
+- Seçenekler gerçek cevap metinleri olsun, asla "A", "B", "C", "D" gibi harf kullanma
+- Sadece bir seçenek doğru olsun, geri kalanlar makul ama yanlış olsun
+- "correct" alanı doğru seçeneğin 0'dan başlayan indexi olsun (0, 1, 2 veya 3)
+- Tüm bilgiler doğru ve güncel olsun
+- Yanıt olarak yalnızca geçerli bir JSON array döndür, başka hiçbir şey yazma
+
+Format:
+[
+  {
+    "text": "Türkiye'nin başkenti neresidir?",
+    "options": ["İstanbul", "Ankara", "İzmir", "Bursa"],
+    "correct": 1
+  }
+]`;
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      temperature: 0.7,
-      messages: [{ role: "user", content: prompt }],
+      model: "gpt-4o-mini",
+      temperature: 0.5,
+      messages: [
+        {
+          role: "system",
+          content: "Sen bir quiz uzmanısın. Verilen konuda doğru, eğitici ve net sorular oluşturursun. Yanıt olarak yalnızca geçerli JSON array döndürürsün."
+        },
+        { role: "user", content: prompt }
+      ],
     });
 
     const jsonText = completion.choices[0].message.content;
